@@ -45,11 +45,16 @@ If CDN is completely blocked, you can:
    <link rel="stylesheet" href="{{ url_for('static', filename='fontawesome/css/all.min.css') }}">
    ```
 
-**Option B: Use Different CDN**
-Update `templates/base.html` line 8 to use jsDelivr:
+**Option B: Use Different CDN (Already Added)**
+The app now tries multiple CDNs automatically. If all fail, manually update `templates/base.html` line 8:
 ```html
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css">
 ```
+
+**Option C: Clear Browser Cache and Hard Refresh**
+- **Windows/Linux**: `Ctrl + Shift + R` or `Ctrl + F5`
+- **Mac**: `Cmd + Shift + R`
+- This forces browser to reload all resources
 
 ### 6. **Verify CDN is Working**
 Test the CDN link directly in your browser:
@@ -64,11 +69,19 @@ The application will function normally even if icons don't load - you'll just se
 
 ## Quick Test
 
-1. Open browser Developer Tools (F12)
-2. Go to Network tab
-3. Refresh the page
-4. Look for `all.min.css` - if it shows red/failed, CDN is blocked
-5. Check Console tab for any error messages
+1. **Open browser Developer Tools** (Press F12)
+2. **Go to Console tab** - Look for messages:
+   - ✅ `Font Awesome loaded successfully!` = Working
+   - ⚠️ `Font Awesome not loaded` = CDN issue
+   - ❌ `All CDN sources failed` = All CDNs blocked
+3. **Go to Network tab** → Refresh page
+4. **Look for `all.min.css`** - if it shows red/failed, CDN is blocked
+5. **Test CDN directly** - Open this URL in browser:
+   ```
+   https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css
+   ```
+   - If it loads = CDN works, check browser/extension blocking
+   - If it doesn't load = Network/firewall blocking CDN
 
 ## Still Having Issues?
 
