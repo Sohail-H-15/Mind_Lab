@@ -45,6 +45,7 @@ Get comprehensive insights for any topic:
 
 ## Installation
 
+### For New Users:
 1. **Clone or download the project**
 
 2. **Create and activate virtual environment** (recommended):
@@ -64,10 +65,13 @@ Get comprehensive insights for any topic:
 4. **Set up Google Gemini API** (Optional but recommended):
    
    - Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
-   - Create a `.env` file in the project root:
+   - Create a `.env` file in the project root (see `HOW_TO_CREATE_ENV.md` for detailed instructions):
      ```
      GEMINI_API_KEY=your_api_key_here
      ```
+   - **⚠️ IMPORTANT**: File must be named exactly `.env` (not `env.env`, `env.txt`, or `.env.txt`)
+   - **If you saved it as `env.env`**: See `FIX_ENV_FILENAME.md` to rename it correctly
+   - **Quick method**: Create a new file named `.env` in the project root folder and add the line above with your API key
    - The application will work without the API key using fallback responses, but for best experience with dynamic content generation, add your API key.
 
 5. **Run the application**:
@@ -79,6 +83,17 @@ Get comprehensive insights for any topic:
    Open your browser and navigate to `http://localhost:5000`
 
 **Note:** If you don't have a Gemini API key, the application will still work using fallback templates, but you'll get more dynamic and intelligent responses with the API key configured.
+
+### For Existing Users (Updating Your Clone):
+
+If you already cloned the repository and want to get the latest fixes:
+
+```bash
+cd MindLab
+git pull origin main
+```
+
+Then restart your Flask app. See `UPDATE_EXISTING_CLONE.md` for detailed instructions.
 
 ## Usage
 
