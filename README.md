@@ -2,6 +2,16 @@
 
 An intelligent learning platform that combines interactive learning activities, AI-powered insights, and a smart chatbot to enhance the learning experience.
 
+## ⚠️ Important: Icons Not Showing?
+
+If icons are not appearing, it's likely a CDN connectivity issue. The app uses Font Awesome icons from a CDN. Solutions:
+
+1. **Check Internet Connection**: Icons load from CDN, so internet is required
+2. **Try Different Browser**: Some browsers block CDN resources
+3. **Check Browser Console**: Press F12 → Console tab to see any errors
+4. **Firewall/Network**: Some networks block CDN access - check with your network admin
+5. **Alternative**: The app will still function without icons, just without visual icons
+
 ## Features
 
 ### 1. User Authentication System
