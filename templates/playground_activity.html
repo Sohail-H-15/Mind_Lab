@@ -1,0 +1,765 @@
+{% extends "base.html" %}
+
+{% block title %}Learning Activities - MindLab{% endblock %}
+
+{% block extra_css %}
+<style>
+    .activity-container {
+        min-height: 400px;
+        padding: 20px;
+        border: 2px dashed #ddd;
+        border-radius: 10px;
+        margin: 20px 0;
+    }
+    .draggable-item {
+        cursor: move;
+        padding: 10px;
+        margin: 5px;
+        background: #007bff;
+        color: white;
+        border-radius: 5px;
+        display: inline-block;
+    }
+    .drop-zone {
+        min-height: 100px;
+        padding: 15px;
+        margin: 10px 0;
+        border: 2px solid #28a745;
+        border-radius: 5px;
+        background: #f8f9fa;
+    }
+    .step-item {
+        padding: 15px;
+        margin: 10px 0;
+        background: #fff;
+        border: 2px solid #007bff;
+        border-radius: 5px;
+        cursor: move;
+    }
+    .flashcard {
+        width: 100%;
+        height: 300px;
+        perspective: 1000px;
+        margin: 20px auto;
+    }
+    .flashcard-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        text-align: center;
+        transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        transform-style: preserve-3d;
+    }
+    .flashcard.flipped .flashcard-inner {
+        transform: rotateY(180deg);
+    }
+    .flashcard-front, .flashcard-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        padding: 20px;
+    }
+    .flashcard-front {
+        background: #007bff;
+        color: white;
+    }
+    .flashcard-back {
+        background: #28a745;
+        color: white;
+        transform: rotateY(180deg);
+    }
+    .blank-input {
+        border: none;
+        border-bottom: 2px solid #007bff;
+        padding: 5px;
+        margin: 0 5px;
+        width: 150px;
+    }
+    .concept-flow-container {
+        position: relative;
+        min-height: 500px;
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 20px;
+        margin: 20px 0;
+        overflow: auto;
+    }
+    .flow-box {
+        position: absolute;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px;
+        border-radius: 12px;
+        cursor: pointer;
+        text-align: center;
+        font-weight: 500;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        transition: all 0.3s ease;
+        border: 3px solid transparent;
+        min-height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        word-wrap: break-word;
+    }
+    .flow-box:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    }
+    .flow-box.selected {
+        border-color: #ffd700;
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+        animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">
+    <i class="fas fa-puzzle-piece"></i> Learning: {{ topic }}
+</h2>
+
+<ul class="nav nav-tabs mb-4" id="activityTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#dragdrop" type="button">
+            <i class="fas fa-hand-paper"></i> Drag & Drop
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#fillblanks" type="button">
+            <i class="fas fa-edit"></i> Fill in Blanks
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#flashcards" type="button">
+            <i class="fas fa-clone"></i> Flashcards
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#quiz" type="button">
+            <i class="fas fa-question-circle"></i> Quiz
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#conceptflow" type="button">
+            <i class="fas fa-project-diagram"></i> Concept Flow
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="activityTabContent">
+    <!-- Drag & Drop Activity -->
+    <div class="tab-pane fade show active" id="dragdrop" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                <h5 id="dragdrop-title" class="card-title"></h5>
+                <div class="activity-container">
+                    <div class="mb-4">
+                        <h6>Items to Drag:</h6>
+                        <div id="drag-items"></div>
+                    </div>
+                    <div id="drop-zones"></div>
+                </div>
+                <div class="mb-3">
+                    <button class="btn btn-primary" onclick="checkDragDrop()">Check Answer</button>
+                    <button class="btn btn-secondary" onclick="resetDragDrop()" id="reset-dragdrop-btn" style="display: none;">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+                <div id="dragdrop-feedback" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fill in Blanks Activity -->
+    <div class="tab-pane fade" id="fillblanks" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                <h5 id="fillblanks-title" class="card-title"></h5>
+                <div class="activity-container">
+                    <div id="fillblanks-text" class="lead"></div>
+                </div>
+                <button class="btn btn-primary" onclick="checkFillBlanks()">Check Answer</button>
+                <div id="fillblanks-feedback" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flashcards Activity -->
+    <div class="tab-pane fade" id="flashcards" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Flashcards</h5>
+                <div class="flashcard" id="flashcard" onclick="flipCard()">
+                    <div class="flashcard-inner">
+                        <div class="flashcard-front">
+                            <h3 id="flashcard-front"></h3>
+                        </div>
+                        <div class="flashcard-back">
+                            <p id="flashcard-back"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center mt-3">
+                    <button class="btn btn-secondary" onclick="prevCard()">Previous</button>
+                    <span class="mx-3">
+                        <span id="card-number">1</span> / <span id="card-total">1</span>
+                    </span>
+                    <button class="btn btn-secondary" onclick="nextCard()">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Activity -->
+    <div class="tab-pane fade" id="quiz" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                <h5 id="quiz-title" class="card-title"></h5>
+                <div class="activity-container">
+                    <div id="quiz-questions"></div>
+                </div>
+                <button class="btn btn-primary" onclick="submitQuiz()">Submit Quiz</button>
+                <div id="quiz-results" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Concept Flow Builder Activity -->
+    <div class="tab-pane fade" id="conceptflow" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                <h5 id="conceptflow-title" class="card-title"></h5>
+                <p class="text-muted">Click on boxes in sequence to connect them with arrows</p>
+                <div class="concept-flow-container" id="concept-flow-container">
+                    <svg id="flow-svg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;"></svg>
+                    <div id="flow-boxes" style="position: relative; z-index: 2;"></div>
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-secondary" onclick="resetConceptFlow()">Reset</button>
+                    <button class="btn btn-primary" onclick="checkConceptFlow()">Check Flow</button>
+                </div>
+                <div id="conceptflow-feedback" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const topic = "{{ topic }}";
+let activities = {};
+let currentCardIndex = 0;
+let flashcards = [];
+let quizAnswers = {};
+
+// Load activities when page loads
+fetch(`/api/generate-activities/${encodeURIComponent(topic)}`)
+    .then(response => response.json())
+    .then(data => {
+        activities = data;
+        loadDragDrop();
+        loadFillBlanks();
+        loadFlashcards();
+        loadQuiz();
+        loadConceptFlow();
+    });
+
+// Drag & Drop Functions
+function loadDragDrop() {
+    const activity = activities.drag_drop;
+    document.getElementById('dragdrop-title').textContent = activity.title;
+    
+    const itemsContainer = document.getElementById('drag-items');
+    itemsContainer.innerHTML = '';
+    activity.items.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'draggable-item';
+        div.draggable = true;
+        div.id = `item-${index}`;
+        div.dataset.itemIndex = index;
+        div.textContent = item;
+        div.ondragstart = (e) => {
+            e.dataTransfer.setData('text/plain', index);
+            e.dataTransfer.setData('item', item);
+            e.dataTransfer.effectAllowed = 'move';
+        };
+        itemsContainer.appendChild(div);
+    });
+    
+    const zonesContainer = document.getElementById('drop-zones');
+    zonesContainer.innerHTML = '';
+    activity.targets.forEach((target, index) => {
+        const div = document.createElement('div');
+        div.className = 'drop-zone';
+        div.id = `zone-${index}`;
+        div.innerHTML = `<strong>${target}</strong>`;
+        div.ondragover = (e) => e.preventDefault();
+        div.ondrop = (e) => {
+            e.preventDefault();
+            const itemIndex = e.dataTransfer.getData('text/plain');
+            const itemEl = document.getElementById(`item-${itemIndex}`);
+            if (itemEl) {
+                // Allow moving from any location (original container or another drop zone)
+                div.appendChild(itemEl);
+            }
+        };
+        zonesContainer.appendChild(div);
+    });
+}
+
+function checkDragDrop() {
+    const feedback = document.getElementById('dragdrop-feedback');
+    const activity = activities.drag_drop;
+    const itemsContainer = document.getElementById('drag-items');
+    const unplacedItems = itemsContainer.querySelectorAll('.draggable-item');
+    
+    if (unplacedItems.length > 0) {
+        const unplacedCount = unplacedItems.length;
+        feedback.innerHTML = `<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> Please place all items in the zones. ${unplacedCount} item(s) remaining.</div>`;
+        return;
+    }
+    
+    // All items are placed, now check correctness
+    const dropZones = document.querySelectorAll('.drop-zone');
+    const userMapping = {};
+    let allCorrect = true;
+    const wrongItems = [];
+    
+    dropZones.forEach(zone => {
+        const category = zone.querySelector('strong').textContent;
+        const itemsInZone = zone.querySelectorAll('.draggable-item');
+        itemsInZone.forEach(item => {
+            userMapping[item.textContent] = category;
+        });
+    });
+    
+    // Check against correct mapping
+    if (activity.correct_mapping) {
+        Object.keys(activity.correct_mapping).forEach(item => {
+            const correctCategory = activity.correct_mapping[item];
+            const userCategory = userMapping[item];
+            if (userCategory !== correctCategory) {
+                allCorrect = false;
+                wrongItems.push({item: item, correct: correctCategory, user: userCategory});
+            }
+        });
+    }
+    
+    if (allCorrect) {
+        feedback.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle"></i> Perfect! All items are in the correct categories!</div>';
+        document.getElementById('reset-dragdrop-btn').style.display = 'none';
+        saveActivity('drag_drop', {completed: true, correct: true});
+    } else {
+        let wrongAnswersHtml = '<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Some items are in the wrong categories:<br><ul class="mt-2">';
+        wrongItems.forEach(w => {
+            wrongAnswersHtml += `<li><strong>${w.item}</strong> should be in <strong>${w.correct}</strong> (you placed it in ${w.user})</li>`;
+        });
+        wrongAnswersHtml += '</ul><p class="mt-2 mb-0"><small>Click Reset to try again.</small></p></div>';
+        feedback.innerHTML = wrongAnswersHtml;
+        document.getElementById('reset-dragdrop-btn').style.display = 'inline-block';
+        saveActivity('drag_drop', {completed: true, correct: false});
+    }
+}
+
+function resetDragDrop() {
+    const itemsContainer = document.getElementById('drag-items');
+    const dropZones = document.querySelectorAll('.drop-zone');
+    
+    // Move all items back to the original container
+    dropZones.forEach(zone => {
+        const itemsInZone = zone.querySelectorAll('.draggable-item');
+        itemsInZone.forEach(item => {
+            itemsContainer.appendChild(item);
+        });
+    });
+    
+    // Clear feedback and hide reset button
+    document.getElementById('dragdrop-feedback').innerHTML = '';
+    document.getElementById('reset-dragdrop-btn').style.display = 'none';
+}
+
+// Fill in Blanks Functions
+function loadFillBlanks() {
+    const activity = activities.fill_blanks;
+    document.getElementById('fillblanks-title').textContent = activity.title;
+    
+    let text = activity.text;
+    activity.blanks.forEach((blank, index) => {
+        text = text.replace(`__${index + 1}__`, 
+            `<input type="text" class="blank-input" id="blank-${index}" placeholder="Type here">`);
+    });
+    
+    document.getElementById('fillblanks-text').innerHTML = text;
+}
+
+function checkFillBlanks() {
+    const activity = activities.fill_blanks;
+    const feedback = document.getElementById('fillblanks-feedback');
+    let correct = 0;
+    const wrongAnswers = [];
+    
+    activity.blanks.forEach((blank, index) => {
+        const input = document.getElementById(`blank-${index}`);
+        const userAnswer = input.value.toLowerCase().trim();
+        const correctAnswer = blank.toLowerCase();
+        
+        if (userAnswer === correctAnswer) {
+            correct++;
+            input.style.borderBottomColor = '#28a745';
+            input.style.color = '#28a745';
+        } else {
+            input.style.borderBottomColor = '#dc3545';
+            input.style.color = '#dc3545';
+            wrongAnswers.push({
+                index: index + 1,
+                user: input.value || '(empty)',
+                correct: blank
+            });
+        }
+    });
+    
+    const score = Math.round((correct / activity.blanks.length) * 100);
+    
+    if (score === 100) {
+        feedback.innerHTML = `<div class="alert alert-success">
+            <i class="fas fa-check-circle"></i> Perfect! All answers are correct! Score: ${score}%
+        </div>`;
+    } else {
+        let wrongAnswersHtml = `<div class="alert alert-danger">
+            <i class="fas fa-times-circle"></i> Score: ${score}% (${correct}/${activity.blanks.length} correct)
+            <br><strong>Correct Answers:</strong><ul class="mt-2">`;
+        wrongAnswers.forEach(w => {
+            wrongAnswersHtml += `<li>Blank ${w.index}: <strong>${w.correct}</strong> (you answered: ${w.user})</li>`;
+        });
+        wrongAnswersHtml += '</ul></div>';
+        feedback.innerHTML = wrongAnswersHtml;
+    }
+    
+    saveActivity('fill_blanks', {score: score, completed: true});
+}
+
+// Flashcards Functions
+function loadFlashcards() {
+    flashcards = activities.flashcards;
+    currentCardIndex = 0;
+    document.getElementById('card-total').textContent = flashcards.length;
+    showCard();
+}
+
+function showCard() {
+    if (flashcards.length === 0) return;
+    const card = flashcards[currentCardIndex];
+    document.getElementById('flashcard-front').textContent = card.front;
+    document.getElementById('flashcard-back').textContent = card.back;
+    document.getElementById('card-number').textContent = currentCardIndex + 1;
+    document.getElementById('flashcard').classList.remove('flipped');
+}
+
+function flipCard() {
+    document.getElementById('flashcard').classList.toggle('flipped');
+}
+
+function nextCard() {
+    if (currentCardIndex < flashcards.length - 1) {
+        currentCardIndex++;
+        showCard();
+    }
+}
+
+function prevCard() {
+    if (currentCardIndex > 0) {
+        currentCardIndex--;
+        showCard();
+    }
+}
+
+// Quiz Functions
+function loadQuiz() {
+    const quiz = activities.quiz;
+    document.getElementById('quiz-title').textContent = quiz.title;
+    
+    const container = document.getElementById('quiz-questions');
+    container.innerHTML = '';
+    
+    quiz.questions.forEach((q, qIndex) => {
+        const div = document.createElement('div');
+        div.className = 'mb-4';
+        div.innerHTML = `
+            <h6>${qIndex + 1}. ${q.question}</h6>
+            ${q.options.map((opt, oIndex) => `
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="q${qIndex}" id="q${qIndex}o${oIndex}" value="${oIndex}">
+                    <label class="form-check-label" for="q${qIndex}o${oIndex}">${opt}</label>
+                </div>
+            `).join('')}
+        `;
+        container.appendChild(div);
+    });
+}
+
+function submitQuiz() {
+    const quiz = activities.quiz;
+    const results = document.getElementById('quiz-results');
+    let score = 0;
+    let total = quiz.questions.length;
+    const wrongAnswers = [];
+    
+    quiz.questions.forEach((q, qIndex) => {
+        const selected = document.querySelector(`input[name="q${qIndex}"]:checked`);
+        const selectedIndex = selected ? parseInt(selected.value) : -1;
+        
+        if (selectedIndex === q.correct) {
+            score++;
+            // Mark correct answer
+            const correctRadio = document.getElementById(`q${qIndex}o${q.correct}`);
+            if (correctRadio) {
+                correctRadio.parentElement.style.color = '#28a745';
+                correctRadio.parentElement.style.fontWeight = 'bold';
+            }
+        } else {
+            // Mark wrong answer
+            if (selected) {
+                selected.parentElement.style.color = '#dc3545';
+            }
+            // Mark correct answer
+            const correctRadio = document.getElementById(`q${qIndex}o${q.correct}`);
+            if (correctRadio) {
+                correctRadio.parentElement.style.color = '#28a745';
+                correctRadio.parentElement.style.fontWeight = 'bold';
+            }
+            wrongAnswers.push({
+                question: q.question,
+                userAnswer: selected ? q.options[selectedIndex] : 'Not answered',
+                correctAnswer: q.options[q.correct]
+            });
+        }
+    });
+    
+    const percentage = Math.round((score / total) * 100);
+    
+    let resultsHtml = `<div class="alert alert-${percentage === 100 ? 'success' : 'warning'}">
+        <h5><i class="fas fa-${percentage === 100 ? 'check-circle' : 'exclamation-triangle'}"></i> Quiz Results</h5>
+        <p><strong>Score: ${score}/${total} (${percentage}%)</strong></p>`;
+    
+    if (percentage === 100) {
+        resultsHtml += '<p>Perfect! Excellent work!</p>';
+    } else if (wrongAnswers.length > 0) {
+        resultsHtml += '<br><strong>Correct Answers:</strong><ul class="mt-2">';
+        wrongAnswers.forEach((w, idx) => {
+            resultsHtml += `<li><strong>Q${wrongAnswers.length > 1 ? idx + 1 : ''}:</strong> ${w.question}<br>
+                ✓ Correct: <strong style="color: #28a745;">${w.correctAnswer}</strong><br>
+                ✗ Your answer: <span style="color: #dc3545;">${w.userAnswer}</span></li>`;
+        });
+        resultsHtml += '</ul>';
+    }
+    
+    resultsHtml += '</div>';
+    results.innerHTML = resultsHtml;
+    saveActivity('quiz', {score: percentage, completed: true});
+}
+
+// Concept Flow Functions
+let conceptFlowData = null;
+let selectedBoxes = [];
+let connections = [];
+
+function loadConceptFlow() {
+    const flow = activities.concept_flow;
+    conceptFlowData = flow;
+    document.getElementById('conceptflow-title').textContent = flow.title;
+    
+    const container = document.getElementById('flow-boxes');
+    const svg = document.getElementById('flow-svg');
+    container.innerHTML = '';
+    svg.innerHTML = '';
+    selectedBoxes = [];
+    connections = [];
+    
+    // Create boxes in a grid layout with better spacing
+    const steps = flow.steps;
+    const cols = Math.min(3, Math.ceil(Math.sqrt(steps.length * 1.5)));
+    const boxWidth = 200;
+    const boxHeight = 120;
+    const spacingX = 320;  // Increased horizontal spacing
+    const spacingY = 220;  // Increased vertical spacing
+    
+    steps.forEach((step, index) => {
+        const col = index % cols;
+        const row = Math.floor(index / cols);
+        const x = col * spacingX + 100;
+        const y = row * spacingY + 100;
+        
+        const box = document.createElement('div');
+        box.className = 'flow-box';
+        box.id = `box-${step.id}`;
+        box.dataset.stepId = step.id;
+        box.textContent = step.text;
+        box.style.left = x + 'px';
+        box.style.top = y + 'px';
+        box.style.width = boxWidth + 'px';
+        box.onclick = () => selectBox(step.id, box);
+        container.appendChild(box);
+    });
+    
+    // Set container size
+    const maxRow = Math.floor((steps.length - 1) / cols);
+    container.style.height = (maxRow * spacingY + 300) + 'px';
+    container.style.width = (cols * spacingX + 200) + 'px';
+    svg.setAttribute('width', container.style.width);
+    svg.setAttribute('height', container.style.height);
+}
+
+function selectBox(stepId, boxElement) {
+    if (selectedBoxes.includes(stepId)) {
+        // Deselect if already selected
+        const index = selectedBoxes.indexOf(stepId);
+        selectedBoxes.splice(index, 1);
+        boxElement.classList.remove('selected');
+        // Remove connection
+        if (index < connections.length) {
+            connections.splice(index, 1);
+        }
+        redrawConnections();
+        return;
+    }
+    
+    // Add to selection
+    selectedBoxes.push(stepId);
+    boxElement.classList.add('selected');
+    
+    // Draw connection if there's a previous box
+    if (selectedBoxes.length > 1) {
+        const prevId = selectedBoxes[selectedBoxes.length - 2];
+        const prevBox = document.getElementById(`box-${prevId}`);
+        const currentBox = boxElement;
+        
+        connections.push({
+            from: prevId,
+            to: stepId,
+            fromEl: prevBox,
+            toEl: currentBox
+        });
+    }
+    
+    redrawConnections();
+}
+
+function redrawConnections() {
+    const svg = document.getElementById('flow-svg');
+    svg.innerHTML = '';
+    
+    connections.forEach(conn => {
+        const fromRect = conn.fromEl.getBoundingClientRect();
+        const toRect = conn.toEl.getBoundingClientRect();
+        const containerRect = document.getElementById('flow-boxes').getBoundingClientRect();
+        
+        const x1 = fromRect.left - containerRect.left + fromRect.width / 2;
+        const y1 = fromRect.top - containerRect.top + fromRect.height / 2;
+        const x2 = toRect.left - containerRect.left + toRect.width / 2;
+        const y2 = toRect.top - containerRect.top + toRect.height / 2;
+        
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', x1);
+        line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2);
+        line.setAttribute('y2', y2);
+        line.setAttribute('stroke', '#667eea');
+        line.setAttribute('stroke-width', '3');
+        line.setAttribute('marker-end', 'url(#arrowhead)');
+        svg.appendChild(line);
+    });
+    
+    // Add arrowhead marker if not exists
+    if (!document.getElementById('arrowhead')) {
+        const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+        marker.setAttribute('id', 'arrowhead');
+        marker.setAttribute('markerWidth', '10');
+        marker.setAttribute('markerHeight', '10');
+        marker.setAttribute('refX', '9');
+        marker.setAttribute('refY', '3');
+        marker.setAttribute('orient', 'auto');
+        const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        polygon.setAttribute('points', '0 0, 10 3, 0 6');
+        polygon.setAttribute('fill', '#667eea');
+        marker.appendChild(polygon);
+        defs.appendChild(marker);
+        svg.appendChild(defs);
+    }
+}
+
+function resetConceptFlow() {
+    selectedBoxes = [];
+    connections = [];
+    document.querySelectorAll('.flow-box').forEach(box => {
+        box.classList.remove('selected');
+    });
+    redrawConnections();
+}
+
+function checkConceptFlow() {
+    const feedback = document.getElementById('conceptflow-feedback');
+    if (!conceptFlowData || !conceptFlowData.correct_flow) {
+        feedback.innerHTML = '<div class="alert alert-warning">Please wait for the activity to load.</div>';
+        return;
+    }
+    
+    const correctFlow = conceptFlowData.correct_flow;
+    
+    if (selectedBoxes.length === 0) {
+        feedback.innerHTML = '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> Please connect the boxes first!</div>';
+        return;
+    }
+    
+    if (selectedBoxes.length !== correctFlow.length) {
+        feedback.innerHTML = `<div class="alert alert-warning"><i class="fas fa-info-circle"></i> You've connected ${selectedBoxes.length} boxes, but need to connect ${correctFlow.length}. Continue connecting!</div>`;
+        return;
+    }
+    
+    const isCorrect = JSON.stringify(selectedBoxes) === JSON.stringify(correctFlow);
+    
+    if (isCorrect) {
+        feedback.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle"></i> Perfect! You connected the flow correctly! Well done!</div>';
+        saveActivity('concept_flow', {completed: true, correct: true});
+    } else {
+        // Show correct answer
+        const steps = conceptFlowData.steps;
+        let correctAnswerHtml = '<div class="alert alert-danger"><i class="fas fa-times-circle"></i> The flow is not correct.<br><br>';
+        correctAnswerHtml += '<strong>Correct Flow:</strong><ol class="mt-2">';
+        correctFlow.forEach(stepId => {
+            const step = steps.find(s => s.id === stepId);
+            if (step) {
+                correctAnswerHtml += `<li>${step.text}</li>`;
+            }
+        });
+        correctAnswerHtml += '</ol>';
+        correctAnswerHtml += '<p class="mt-2 mb-0"><small>Click Reset to try again.</small></p></div>';
+        feedback.innerHTML = correctAnswerHtml;
+        saveActivity('concept_flow', {completed: true, correct: false});
+    }
+}
+
+// Save activity progress
+function saveActivity(type, data) {
+    fetch('/api/save-activity', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            topic: topic,
+            type: type,
+            data: data
+        })
+    });
+}
+</script>
+{% endblock %}
+

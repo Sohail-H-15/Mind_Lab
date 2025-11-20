@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Pattern Insight - MindLab{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">
+    <i class="fas fa-chart-line"></i> AI Pattern Insight Engine
+</h2>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Enter a Topic for Analysis</h5>
+        <form method="POST" action="{{ url_for('pattern_insight') }}">
+            <div class="input-group">
+                <input type="text" class="form-control form-control-lg" name="topic" 
+                       placeholder="e.g., Photosynthesis, Machine Learning, History..." 
+                       value="{{ topic if topic else '' }}" required>
+                <button class="btn btn-primary btn-lg" type="submit">
+                    <i class="fas fa-search"></i> Analyze
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if insights %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-file-alt"></i> Summarization</h5>
+            </div>
+            <div class="card-body">
+                <p class="lead">{{ insights.summary }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-project-diagram"></i> Pattern Recognition</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for pattern in insights.patterns %}
+                    <li class="list-group-item">
+                        <i class="fas fa-circle text-success"></i> {{ pattern }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-signal"></i> Difficulty Level Prediction</h5>
+            </div>
+            <div class="card-body">
+                <h3 class="text-center">
+                    {% if insights.difficulty == 'basic' %}
+                        <span class="badge bg-success">Basic</span>
+                    {% elif insights.difficulty == 'intermediate' %}
+                        <span class="badge bg-warning">Intermediate</span>
+                    {% else %}
+                        <span class="badge bg-danger">Expert</span>
+                    {% endif %}
+                </h3>
+                <p class="text-center text-muted mt-3">
+                    Predicted difficulty level for this topic
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-12 mb-4">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-lightbulb"></i> Concept Explanation</h5>
+            </div>
+            <div class="card-body">
+                <p>{{ insights.explanation }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-12 mb-4">
+        <div class="card border-secondary">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-link"></i> Related Topics</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2">
+                    {% for related in insights.related_topics %}
+                    <span class="badge bg-secondary p-2">
+                        <i class="fas fa-tag"></i> {{ related }}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <h5><i class="fas fa-info-circle"></i> How it works</h5>
+    <p>Enter any topic above and get instant AI-powered insights including:</p>
+    <ul>
+        <li><strong>Summarization:</strong> Quick overview of the topic</li>
+        <li><strong>Pattern Recognition:</strong> Key patterns and themes identified</li>
+        <li><strong>Difficulty Prediction:</strong> Estimated learning difficulty</li>
+        <li><strong>Concept Explanation:</strong> Detailed explanation of the concept</li>
+        <li><strong>Related Topics:</strong> Topics connected to your query</li>
+    </ul>
+</div>
+{% endif %}
+{% endblock %}
+

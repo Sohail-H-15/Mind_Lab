@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - MindLab{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px 0;
+        border-radius: 15px;
+        margin-bottom: 40px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+    
+    .dashboard-header h2 {
+        margin: 0;
+        font-size: 2.5rem;
+        font-weight: 700;
+    }
+    
+    .feature-card-modern {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        text-align: center;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        height: 100%;
+        border: none;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .feature-card-modern::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+    }
+    
+    .feature-card-modern:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+    }
+    
+    .feature-icon-large {
+        font-size: 50px;
+        margin-bottom: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .concept-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        border-left: 4px solid #667eea;
+    }
+    
+    .concept-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header text-center">
+    <h2>
+        <i class="fas fa-tachometer-alt"></i> Welcome back, {{ session.username }}!
+    </h2>
+    <p class="mt-2 mb-0" style="opacity: 0.9;">Ready to continue your learning journey?</p>
+</div>
+
+<div class="row mb-5">
+    <div class="col-md-4 mb-4">
+        <div class="feature-card-modern">
+            <div class="feature-icon-large">
+                <i class="fas fa-puzzle-piece"></i>
+            </div>
+            <h4 class="mb-3">Concept Playground</h4>
+            <p class="text-muted mb-4">Interactive learning activities for any topic</p>
+            <a href="{{ url_for('concept_playground') }}" class="btn btn-primary w-100">
+                <i class="fas fa-rocket"></i> Explore
+            </a>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="feature-card-modern">
+            <div class="feature-icon-large">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h4 class="mb-3">Pattern Insight</h4>
+            <p class="text-muted mb-4">AI-powered topic analysis and insights</p>
+            <a href="{{ url_for('pattern_insight') }}" class="btn btn-primary w-100">
+                <i class="fas fa-search"></i> Analyze
+            </a>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="feature-card-modern">
+            <div class="feature-icon-large">
+                <i class="fas fa-robot"></i>
+            </div>
+            <h4 class="mb-3">Chatbot</h4>
+            <p class="text-muted mb-4">Get instant answers to your questions</p>
+            <a href="{{ url_for('chatbot') }}" class="btn btn-primary w-100">
+                <i class="fas fa-comments"></i> Chat
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">
+        <i class="fas fa-book"></i> Recent Concepts
+    </h3>
+    {% if concepts %}
+    <form method="POST" action="{{ url_for('clear_concepts') }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to clear all concepts?');">
+        <button type="submit" class="btn btn-sm btn-outline-danger">
+            <i class="fas fa-trash"></i> Clear All
+        </button>
+    </form>
+    {% endif %}
+</div>
+{% if concepts %}
+<div class="row">
+    {% for concept in concepts %}
+    <div class="col-md-4 mb-4">
+        <div class="concept-card">
+            <h5 class="mb-3">
+                <i class="fas fa-lightbulb text-warning"></i> {{ concept['topic'] }}
+            </h5>
+            <p class="text-muted mb-3">
+                <small><i class="fas fa-clock"></i> {{ concept['created_at'] }}</small>
+            </p>
+            <a href="{{ url_for('playground_activity', topic=concept['topic']) }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-play"></i> Continue Learning
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info border-0 shadow-sm">
+    <div class="d-flex align-items-center">
+        <i class="fas fa-info-circle fa-2x me-3"></i>
+        <div>
+            <h5 class="mb-1">No concepts yet</h5>
+            <p class="mb-0">Start learning by visiting the <a href="{{ url_for('concept_playground') }}" class="alert-link">Concept Playground</a>!</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

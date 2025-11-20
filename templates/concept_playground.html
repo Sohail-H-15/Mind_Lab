@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Concept Playground - MindLab{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">
+    <i class="fas fa-puzzle-piece"></i> Concept Playground
+</h2>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Enter a Topic to Learn</h5>
+        <form method="POST" action="{{ url_for('concept_playground') }}">
+            <div class="input-group">
+                <input type="text" class="form-control form-control-lg" name="topic" 
+                       placeholder="e.g., Photosynthesis, Python, World War II..." required>
+                <button class="btn btn-primary btn-lg" type="submit">
+                    <i class="fas fa-play"></i> Start Learning
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Available Activities</h5>
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <div class="card border-primary">
+                    <div class="card-body text-center">
+                        <i class="fas fa-hand-paper fa-2x text-primary mb-2"></i>
+                        <h6>Drag & Drop</h6>
+                        <p class="small text-muted">Match items to categories</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card border-success">
+                    <div class="card-body text-center">
+                        <i class="fas fa-sort fa-2x text-success mb-2"></i>
+                        <h6>Reorder Steps</h6>
+                        <p class="small text-muted">Arrange steps in order</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card border-info">
+                    <div class="card-body text-center">
+                        <i class="fas fa-edit fa-2x text-info mb-2"></i>
+                        <h6>Fill in Blanks</h6>
+                        <p class="small text-muted">Complete sentences</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card border-warning">
+                    <div class="card-body text-center">
+                        <i class="fas fa-clone fa-2x text-warning mb-2"></i>
+                        <h6>Flashcards</h6>
+                        <p class="small text-muted">Flip and learn</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card border-danger">
+                    <div class="card-body text-center">
+                        <i class="fas fa-question-circle fa-2x text-danger mb-2"></i>
+                        <h6>Mini Quiz</h6>
+                        <p class="small text-muted">Test your knowledge</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
